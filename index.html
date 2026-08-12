@@ -230,7 +230,7 @@
             </div>
             <div class="bg-white border border-gray-200 p-5 rounded-lg shadow-sm">
               <div class="text-gray-500 text-[11px] font-medium uppercase tracking-wider mb-2">Deadline</div>
-              <div class="text-xl font-semibold text-gray-900 tracking-tight">Aug 12</div>
+              <div class="text-xl font-semibold text-gray-900 tracking-tight">Aug 05</div>
               <div class="mt-2 text-[11px] font-medium text-rose-700 bg-rose-50 inline-block px-2 py-0.5 rounded-sm border border-rose-200">Due Today</div>
             </div>
           </div>
@@ -334,9 +334,9 @@
         </div>
       </div>
 
-      <div id="view-documents" class="view-panel hidden flex-1 w-full h-full flex-col p-6 md:p-10 overflow-y-auto">
-        <div class="max-w-5xl mx-auto w-full space-y-8">
-          <header class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-200 pb-6">
+      <div id="view-documents" class="view-panel hidden flex-1 w-full h-full flex-col p-6 md:p-10 overflow-y-hidden">
+        <div class="max-w-7xl mx-auto w-full h-full flex flex-col space-y-6">
+          <header class="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-gray-200 pb-6 flex-shrink-0">
             <div>
               <h1 class="text-2xl font-semibold text-gray-900 tracking-tight">Documents</h1>
               <p class="text-[13px] text-gray-500 mt-1">Manage deliverables, assets, and project files.</p>
@@ -346,20 +346,42 @@
                 <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-[14px] h-[14px]"></i>
                 <input type="text" placeholder="Search files..." class="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-md text-[13px] outline-none focus:border-gray-400 transition-all shadow-sm" />
               </div>
-              <button class="w-full sm:w-auto bg-black text-white px-4 py-2 rounded-md text-[13px] font-medium hover:bg-gray-800 transition-all shadow-sm flex items-center justify-center gap-2">
+              <button onclick="handleFileUploadClick()" class="w-full sm:w-auto bg-black text-white px-4 py-2 rounded-md text-[13px] font-medium hover:bg-gray-800 transition-all shadow-sm flex items-center justify-center gap-2">
                 <i data-lucide="upload-cloud" class="w-[14px] h-[14px]"></i> Upload
               </button>
+              <input type="file" id="hidden-file-input" class="hidden" onchange="handleFileSelected(event)" accept=".pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx" />
             </div>
           </header>
-          <div class="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-            <div class="grid grid-cols-12 gap-4 p-4 border-b border-gray-200 bg-gray-50 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
-              <div class="col-span-8 md:col-span-5">File Name</div>
-              <div class="col-span-4 md:col-span-3 hidden md:block">Date Modified</div>
-              <div class="col-span-4 md:col-span-2 hidden md:block">Uploaded By</div>
-              <div class="col-span-4 md:col-span-2 text-right">Size</div>
+
+          <div class="flex-1 flex flex-col lg:flex-row gap-6 min-h-0">
+            <!-- Left Pane: File List -->
+            <div class="w-full lg:w-1/2 bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col overflow-hidden">
+              <div class="grid grid-cols-12 gap-4 p-4 border-b border-gray-200 bg-gray-50 text-[11px] font-semibold text-gray-500 uppercase tracking-wider flex-shrink-0">
+                <div class="col-span-8 md:col-span-6">File Name</div>
+                <div class="col-span-4 md:col-span-3 hidden md:block">Uploaded By</div>
+                <div class="col-span-4 md:col-span-3 text-right">Actions</div>
+              </div>
+              <div id="documents-container" class="flex-1 overflow-y-auto divide-y divide-gray-100">
+                <!-- Injected via JS -->
+              </div>
             </div>
-            <div id="documents-container" class="divide-y divide-gray-100">
-              <!-- Injected via JS -->
+
+            <!-- Right Pane: Preview Panel -->
+            <div class="w-full lg:w-1/2 bg-white border border-gray-200 rounded-lg shadow-sm flex flex-col overflow-hidden">
+              <div class="p-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between flex-shrink-0">
+                <h3 class="text-[13px] font-semibold text-gray-900 flex items-center gap-2">
+                  <i data-lucide="eye" class="w-4 h-4 text-gray-500"></i> Document Preview
+                </h3>
+                <span id="preview-title" class="text-[11px] font-medium text-gray-500 truncate max-w-[200px]">Select a file to preview</span>
+              </div>
+              <div id="preview-content" class="flex-1 bg-gray-100/50 flex flex-col items-center justify-center relative p-2">
+                <div class="text-center space-y-3">
+                  <div class="w-12 h-12 rounded-full bg-white border border-gray-200 shadow-sm flex items-center justify-center mx-auto text-gray-400">
+                    <i data-lucide="file-search" class="w-5 h-5"></i>
+                  </div>
+                  <p class="text-[13px] text-gray-500 font-medium">No document selected</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -683,7 +705,9 @@
     }
 
     function renderTeam() {
-      document.getElementById('team-container').innerHTML = teamMembers.map((member, idx) => `
+      const container = document.getElementById('team-container');
+      if (!container) return;
+      container.innerHTML = teamMembers.map((member, idx) => `
         <div class="bg-white rounded-[20px] border border-gray-200 shadow-sm overflow-hidden flex flex-col group hover:border-gray-300 hover:shadow-md transition-all fade-in-up" style="animation-delay: ${idx * 0.1}s">
           <div class="relative h-72 overflow-hidden">
             <img src="${member.bg}" alt="Background" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" />
@@ -720,26 +744,89 @@
       document.getElementById('documents-container').innerHTML = documentsList.map(doc => {
         const iconName = doc.type === 'pdf' ? 'file-text' : doc.type === 'sheet' ? 'file-spreadsheet' : 'file';
         const iconColor = doc.type === 'pdf' ? 'text-red-600' : doc.type === 'sheet' ? 'text-emerald-600' : 'text-blue-600';
+        // Check if the link is a full URL or a relative path. If relative, we need to construct a full URL for the Google Docs Viewer to work.
+        // For the sake of this demo environment, we assume relative links are hosted on the same domain.
+        // Note: Google Docs Viewer REQUIRES a publicly accessible absolute URL to render.
+        const fileUrl = doc.link.startsWith('http') ? doc.link : window.location.origin + '/' + doc.link;
+        
         return `
-          <div class="grid grid-cols-12 gap-4 p-4 items-center hover:bg-gray-50/50 transition-colors group cursor-pointer fade-in-up">
-            <div class="col-span-8 md:col-span-5 flex items-center gap-3">
+          <div class="grid grid-cols-12 gap-4 p-4 items-center hover:bg-gray-50/50 transition-colors group">
+            <div class="col-span-8 md:col-span-6 flex items-center gap-3">
               <div class="p-2 rounded-md border border-gray-200 bg-white shadow-sm flex-shrink-0 ${iconColor}">
                 <i data-lucide="${iconName}" class="w-[14px] h-[14px]"></i>
               </div>
-              <span class="text-[13px] font-medium text-gray-900 truncate">${doc.name}</span>
+              <div class="flex flex-col min-w-0">
+                <span class="text-[13px] font-medium text-gray-900 truncate">${doc.name}</span>
+                <span class="text-[10px] text-gray-400 mt-0.5">${doc.size} &bull; ${doc.date}</span>
+              </div>
             </div>
-            <div class="col-span-4 md:col-span-3 hidden md:block text-[13px] text-gray-500">${doc.date}</div>
-            <div class="col-span-4 md:col-span-2 hidden md:block text-[13px] text-gray-500">${doc.author}</div>
-            <div class="col-span-4 md:col-span-2 text-[13px] text-gray-500 text-right flex justify-end items-center gap-4">
-              <span>${doc.size}</span>
-              <a href="${doc.link}" download="${doc.name}" target="_blank" rel="noopener noreferrer" class="opacity-0 group-hover:opacity-100 p-1 bg-white border border-gray-200 rounded text-gray-500 hover:text-black hover:border-gray-300 shadow-sm transition-all">
-                <i data-lucide="download" class="w-[14px] h-[14px]"></i>
+            <div class="col-span-4 md:col-span-3 hidden md:block text-[13px] text-gray-500">${doc.author}</div>
+            <div class="col-span-4 md:col-span-3 text-[13px] text-gray-500 text-right flex justify-end items-center gap-2">
+              <button onclick="previewDocument('${doc.name}', '${fileUrl}')" class="px-2.5 py-1.5 bg-white border border-gray-200 rounded text-[11px] font-medium text-gray-700 hover:text-black hover:border-gray-300 shadow-sm transition-all flex items-center gap-1.5">
+                <i data-lucide="eye" class="w-3 h-3"></i> View
+              </button>
+              <a href="${doc.link}" download="${doc.name}" target="_blank" rel="noopener noreferrer" class="p-1.5 bg-white border border-gray-200 rounded text-gray-500 hover:text-black hover:border-gray-300 shadow-sm transition-all">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
               </a>
             </div>
           </div>
         `;
       }).join('');
       lucide.createIcons();
+    }
+
+    function previewDocument(fileName, fileUrl) {
+      document.getElementById('preview-title').textContent = fileName;
+      const previewContainer = document.getElementById('preview-content');
+      
+      // Use Google Docs Viewer to embed PDFs, PPTs, DOCs seamlessly via iframe
+      // Note: This requires fileUrl to be a PUBLICLY ACCESSIBLE absolute URL.
+      // If developing locally (localhost), Google Docs Viewer won't be able to reach your file.
+      const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+      
+      previewContainer.innerHTML = `
+        <div class="absolute inset-0 flex items-center justify-center bg-gray-50 z-0">
+           <div class="flex flex-col items-center gap-3">
+              <i data-lucide="loader-2" class="w-5 h-5 text-gray-400 animate-spin"></i>
+              <span class="text-[11px] text-gray-500 font-medium tracking-wide uppercase">Loading Viewer...</span>
+           </div>
+        </div>
+        <iframe 
+          src="${viewerUrl}" 
+          class="w-full h-full border-none relative z-10 bg-white"
+          onload="this.previousElementSibling.style.display='none';"
+        ></iframe>
+      `;
+      lucide.createIcons();
+    }
+
+    // Dummy Upload Handlers
+    function handleFileUploadClick() {
+      document.getElementById('hidden-file-input').click();
+    }
+
+    function handleFileSelected(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      
+      // In a real app, you would upload this via fetch/AJAX to your Node/Express backend here.
+      // For the UI simulation, we add it to the list.
+      const newDoc = {
+        id: 'doc_' + Date.now(),
+        name: file.name,
+        type: file.name.split('.').pop().toLowerCase(),
+        date: 'Just now',
+        author: 'Arshdeep Kaur',
+        size: (file.size / (1024 * 1024)).toFixed(2) + ' MB',
+        link: URL.createObjectURL(file) // Local preview link
+      };
+      
+      documentsList.unshift(newDoc);
+      renderDocuments();
+      previewDocument(newDoc.name, newDoc.link);
+      
+      // Reset input
+      event.target.value = '';
     }
 
     function renderHistory() {
