@@ -280,7 +280,7 @@
                         <span class="font-semibold text-gray-900 text-[13px]">Parth</span>
                         <span class="text-[11px] text-gray-400">1d ago</span>
                       </div>
-                      <p class="text-[13px] text-gray-600">Uploaded <span class="font-medium text-gray-900">Train_to_Pakistan.pdf</span></p>
+                      <p class="text-[13px] text-gray-600">Uploaded <span class="font-medium text-gray-900">digitalgraveyard_ppt.pptx</span></p>
                     </div>
                   </div>
                 </div>
@@ -301,7 +301,7 @@
           <div class="w-[150vw] h-full relative flex items-center">
             <svg class="absolute inset-0 w-full h-full pointer-events-none" preserveAspectRatio="none">
               <path d="M0,400 Q400,200 800,400 T1600,400 T2400,400 T3200,400" fill="none" stroke="#e5e7eb" stroke-width="2" class="animate-path-bg"></path>
-              <path d="M0,400 Q400,200 800,400 T1600,400 T2400,400 T3200,400" fill="none" stroke="#F97316" stroke-width="3" stroke-dasharray="4 4" style="stroke-dasharray: 4000; stroke-dashoffset: 3520;" class="animate-path-fg"></path>
+              <path d="M0,400 Q400,200 800,400 T1600,400 T2400,400 T3200,400" fill="none" stroke="#F97316" stroke-width="3" style="stroke-dasharray: 4000; stroke-dashoffset: 3520;" class="animate-path-fg"></path>
             </svg>
             <div id="timeline-container">
               <!-- Injected via JS -->
@@ -565,8 +565,26 @@
       { id: 4, name: 'Parth', tasks: [{ id: 't9', text: 'ideate on project graveyard wala idea', done: true }, { id: 't10', text: 'finalize the ppt content for project graveyard presentation', done: false }, { id: 't11', text: 'do idea validation with srudent whose will use our platform.', done: false }] }
     ];
 
+    // Added the PPTX file pointing directly to the relative path in the repo
     const documentsList = [
-      { id: 'doc1', name: 'Train_to_Pakistan_Khushwant_Singh.pdf', type: 'pdf', date: 'Aug 05, 2026', author: 'Arshdeep Kaur', size: '1.2 MB', link: '43cb27_9c35d910a12a43cb8bb7ec40e6d41e86.pdf' }
+      { 
+        id: 'doc_ppt', 
+        name: 'digitalgraveyard_ppt.pptx', 
+        type: 'pptx', 
+        date: 'Aug 05, 2026', 
+        author: 'Arshdeep Kaur', 
+        size: '2.5 MB', 
+        link: 'digitalgraveyard_ppt.pptx' 
+      },
+      { 
+        id: 'doc_pdf', 
+        name: 'script (1).pdf', 
+        type: 'pdf', 
+        date: 'Aug 05, 2026', 
+        author: 'Lakshay', 
+        size: '1.2 MB', 
+        link: 'script (1).pdf' 
+      }
     ];
 
     const versionHistoryData = [
@@ -742,12 +760,11 @@
 
     function renderDocuments() {
       document.getElementById('documents-container').innerHTML = documentsList.map(doc => {
-        const iconName = doc.type === 'pdf' ? 'file-text' : doc.type === 'sheet' ? 'file-spreadsheet' : 'file';
-        const iconColor = doc.type === 'pdf' ? 'text-red-600' : doc.type === 'sheet' ? 'text-emerald-600' : 'text-blue-600';
-        // Check if the link is a full URL or a relative path. If relative, we need to construct a full URL for the Google Docs Viewer to work.
-        // For the sake of this demo environment, we assume relative links are hosted on the same domain.
-        // Note: Google Docs Viewer REQUIRES a publicly accessible absolute URL to render.
-        const fileUrl = doc.link.startsWith('http') ? doc.link : window.location.origin + '/' + doc.link;
+        const iconName = doc.type.includes('pdf') ? 'file-text' : doc.type.includes('sheet') ? 'file-spreadsheet' : 'file';
+        const iconColor = doc.type.includes('pdf') ? 'text-red-600' : doc.type.includes('sheet') ? 'text-emerald-600' : 'text-blue-600';
+        
+        // Ensure relative URLs are converted to Absolute URLs for the cloud viewers to work
+        const fileUrl = doc.link.startsWith('http') ? doc.link : window.location.href.replace('index.html', '') + doc.link;
         
         return `
           <div class="grid grid-cols-12 gap-4 p-4 items-center hover:bg-gray-50/50 transition-colors group">
@@ -779,16 +796,21 @@
       document.getElementById('preview-title').textContent = fileName;
       const previewContainer = document.getElementById('preview-content');
       
-      // Use Google Docs Viewer to embed PDFs, PPTs, DOCs seamlessly via iframe
-      // Note: This requires fileUrl to be a PUBLICLY ACCESSIBLE absolute URL.
-      // If developing locally (localhost), Google Docs Viewer won't be able to reach your file.
-      const viewerUrl = `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
+      // We use Microsoft Office Web Viewer for PPTX/DOCX, and Google Docs Viewer for PDFs.
+      // NOTE: BOTH of these require the fileUrl to be PUBLICLY ACCESSIBLE (e.g. on Github Pages).
+      // They will show an error if you preview this file locally via file:// protocol.
+      const isOfficeFile = fileName.toLowerCase().endsWith('.pptx') || fileName.toLowerCase().endsWith('.ppt') || fileName.toLowerCase().endsWith('.docx');
+      
+      const viewerUrl = isOfficeFile 
+          ? `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(fileUrl)}`
+          : `https://docs.google.com/viewer?url=${encodeURIComponent(fileUrl)}&embedded=true`;
       
       previewContainer.innerHTML = `
         <div class="absolute inset-0 flex items-center justify-center bg-gray-50 z-0">
            <div class="flex flex-col items-center gap-3">
               <i data-lucide="loader-2" class="w-5 h-5 text-gray-400 animate-spin"></i>
               <span class="text-[11px] text-gray-500 font-medium tracking-wide uppercase">Loading Viewer...</span>
+              <span class="text-[9px] text-gray-400 text-center max-w-[200px] mt-2">Note: Viewer requires the website to be hosted live (e.g. GitHub Pages) to fetch the file.</span>
            </div>
         </div>
         <iframe 
@@ -810,7 +832,7 @@
       if (!file) return;
       
       // In a real app, you would upload this via fetch/AJAX to your Node/Express backend here.
-      // For the UI simulation, we add it to the list.
+      // For the UI simulation, we add it to the list using a local object URL
       const newDoc = {
         id: 'doc_' + Date.now(),
         name: file.name,
